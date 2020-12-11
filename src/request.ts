@@ -48,6 +48,7 @@ export class Request {
     method: string,
     uri: string,
     params?: RequestParams,
+    stringify: boolean = true,
   ): Promise<Response> {
     try {
       await this.getAccessToken()
@@ -56,11 +57,11 @@ export class Request {
       const response = await fetch(
         `https://www.strava.com/api/v3${uri}?${query}`,
         {
-          body: JSON.stringify(params?.body),
+          body: stringify ? JSON.stringify(params?.body) : params?.body,
           method,
           headers: {
             Authorization: `Bearer ${this.response.access_token}`,
-            'Content-Type': 'application/json',
+            ...(stringify ? {'Content-Type': 'application/json'} : {}),
           },
         },
       )

@@ -2,6 +2,8 @@ import { Blob } from 'node-fetch'
 
 import { Upload } from '../models'
 import { Request } from '../request'
+import Blob from 'fetch-blob'
+import FormData from 'form-data'
 
 type createUploadRequest = {
   file: Blob
@@ -25,9 +27,13 @@ export class Uploads {
   }
 
   async createUpload(params: createUploadRequest): Promise<Upload> {
+    const formData = new FormData()
+    for (const [k, v] of Object.entries(params)) {
+      formData.append(k, v)
+    }
     return await this.request.makeApiRequest<Upload>('post', '/uploads', {
-      body: params,
-    })
+      body: formData,
+    }, false)
   }
 
   async getUploadById(params: GetUploadByIdRequest): Promise<Upload> {
