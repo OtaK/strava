@@ -24,6 +24,8 @@ export interface TokenExchangeResponse {
   expires_at: number
   expires_in: number
   refresh_token: string
+  access_token: string
+  token_type: "Bearer"
   athlete: SummaryAthlete
 }
 
