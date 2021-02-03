@@ -11,6 +11,7 @@ import {
   Streams,
   Subscriptions,
   Uploads,
+  Oauth,
 } from './resources'
 import { RefreshTokenRequest } from './types'
 
@@ -30,6 +31,7 @@ export class Strava {
   streams: Streams
   subscriptions: Subscriptions
   uploads: Uploads
+  oauth: Oauth
 
   constructor(config: RefreshTokenRequest) {
     this.request = new Request(config)
@@ -44,6 +46,7 @@ export class Strava {
     this.streams = new Streams(this.request)
     this.subscriptions = new Subscriptions(this.request)
     this.uploads = new Uploads(this.request)
+    this.oauth = new Oauth(this.request)
   }
 
   set client(refreshToken: string) {
