@@ -1,11 +1,11 @@
-import fetch from 'node-fetch'
 
+import fetch, { BodyInit } from 'node-fetch'
 import { StravaError } from './errors'
 import { RefreshTokenRequest, RefreshTokenResponse } from './types'
 
 type RequestParams = {
   query?: any
-  body?: any
+  body?: BodyInit|{[k: string]: unknown}
 }
 
 export class Request {
@@ -16,22 +16,21 @@ export class Request {
     this.config = config
   }
 
-  private async getAccessToken(): Promise<RefreshTokenResponse> {
+  async getAccessToken(): Promise<RefreshTokenResponse> {
     if (
       !this.response ||
       this.response?.expires_at < new Date().getTime() / 1000
     ) {
-      const query: string = new URLSearchParams({
-        client_id: this.config.client_id,
-        client_secret: this.config.client_secret,
-        refresh_token: this.config.refresh_token,
-        grant_type: 'refresh_token',
-      }).toString()
-
       const response = await fetch(
-        `https://www.strava.com/oauth/token?${query}`,
+        `https://www.strava.com/oauth/token`,
         {
           method: 'post',
+          body: new URLSearchParams({
+            client_id: this.config.client_id,
+            client_secret: this.config.client_secret,
+            refresh_token: this.config.refresh_token,
+            grant_type: 'refresh_token',
+          }),
         },
       )
 
@@ -44,11 +43,32 @@ export class Request {
     return this.response
   }
 
+  getFetchBody(params?: RequestParams): BodyInit {
+    if (!params?.body) {
+      return null
+    }
+
+    const body = params.body;
+    if (body === null || typeof body !== 'object') {
+      return params.body as BodyInit
+    }
+    const proto = Object.getPrototypeOf(body);
+    if (proto === null) {
+      return new URLSearchParams(body as Record<string, string>)
+    }
+
+    const Ctor = proto.hasOwnProperty("constructor") && proto.constructor;
+    if (typeof Ctor === "function" && Ctor instanceof Ctor && Ctor.toString() === "[object Object]") {
+      return new URLSearchParams(body as Record<string, string>)
+    }
+
+    return body as BodyInit
+  }
+
   public async makeApiRequest<Response>(
     method: string,
     uri: string,
     params?: RequestParams,
-    stringify: boolean = true,
   ): Promise<Response> {
     try {
       await this.getAccessToken()
@@ -57,11 +77,10 @@ export class Request {
       const response = await fetch(
         `https://www.strava.com/api/v3${uri}?${query}`,
         {
-          body: stringify ? JSON.stringify(params?.body) : params?.body,
+          body: this.getFetchBody(params),
           method,
           headers: {
             Authorization: `Bearer ${this.response.access_token}`,
-            ...(stringify ? {'Content-Type': 'application/json'} : {}),
           },
         },
       )

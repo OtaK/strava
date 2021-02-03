@@ -45,4 +45,9 @@ export class Strava {
     this.subscriptions = new Subscriptions(this.request)
     this.uploads = new Uploads(this.request)
   }
+
+  set client(refreshToken: string) {
+    this.request.config.refresh_token = refreshToken
+    this.request.response = null
+  }
 }

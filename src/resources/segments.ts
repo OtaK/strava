@@ -69,7 +69,7 @@ export class Segments {
     return await this.request.makeApiRequest<DetailedSegment>(
       'put',
       `/segments/${id}/starred`,
-      { body },
+      { body: body as unknown as {[k: string]: unknown} },
     )
   }
 }
